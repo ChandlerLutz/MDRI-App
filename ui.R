@@ -37,7 +37,7 @@ shinyUI(fluidPage(
               style = 'font-size: 1.15em;'),
             tableOutput("trends_city_table"),
             br(),
-            a(href = "https://gist.github.com/4211337", "Source code and data for this app"),
+            a(href = "https://github.com/ChandlerLutz/MDRI-App", "Source code and data for this app"),
             width = 9
         )
     )

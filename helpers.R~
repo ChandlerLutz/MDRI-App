@@ -1,0 +1,97 @@
+## c:/Dropbox/PublicShinyApps/MDRI-App/helpers.R
+
+##    Chandler Lutz
+##    Questions/comments: cl.eco@cbs.dk
+##    $Revisions:      1.0.0     $Date:  2016-11-10
+
+library(shiny)
+
+get_end_date <- function() {
+    ##Get today
+    today <- Sys.Date()
+    year.temp <- strftime(today, "%Y")
+    month.temp <- strftime(today, "%m")
+    ##The first day of the current month
+    end.date <- paste(year.temp, month.temp, "01", sep = "-")
+    ##The last day of the previous month
+    end.date <- as.Date(end.date) - 1
+    return(end.date)
+}
+
+
+##A function to make the plot
+plot_trends <- function(trends.data) {
+
+    ##Get the trends data in tidy form
+    trends.tidy <- tidy_ts(trends.data)
+
+
+    ##Create a factor for the US if it's included in the dataset
+    if ("United States" %in% trends.tidy$variable) {
+        ##order the US first
+        trends.tidy$variable  <- factor(trends.tidy$variable,
+                                        levels = unique(trends.tidy$variable),
+                                        ordered = TRUE)
+    }
+
+    ##Color palette from R cookbook
+    cbPalette <- c("darkmagenta",  "darkblue", "darkgreen",  "darkgrey", "gold", "deeppink", "darkred")
+    ##Add a bunch of other colors
+    cbPalette <- c(cbPalette, "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+    ##The plot
+    p <- ggplot(trends.tidy, aes_string(x = "time", y = "value", group = "variable")) +
+        geom_line(aes_string(color = "variable")) +
+        geom_cycle(dates = bear_dates, alpha = 0.1) +
+        scale_colour_manual(values=cbPalette) +
+        ylab("MDRI (% Increase from 2004)") +
+        background_grid(major = "xy", minor = "none") +
+        theme(legend.position = "bottom",
+              axis.title.x = element_blank(),
+              legend.title = element_blank(),
+              legend.text = element_text(size = 16),
+              axis.title.y = element_text(size = 16))
+
+
+    ##return the plot
+    return(p)
+
+}
+
+##A function to get the top 5 based on the trends data
+MDRI_growth_cities <- function(trends.data.raw.xts) {
+
+    f.growth <- function(x) (log(x[2])- log(x[1])) * 100
+
+    trends.data <- trends.data.raw.xts %>%
+        as_zoo_df %>%
+        mutate(year = as.numeric(strftime(time, "%Y")))
+
+    trends.growth <- trends.data %>%
+        filter(time %in% as.Date(c("2006-01-01", "2007-12-01"))) %>%
+        select(-year, -time) %>%
+        summarize_all(funs(f.growth)) %>%
+        gather(City, MDRI.growth) %>%
+        arrange(desc(MDRI.growth)) %>%
+        mutate(City = sub("\\.", " ", City)) %>%
+        mutate(Rank = 1:n()) %>%
+        select(-MDRI.growth) %>%
+        select(Rank, City)
+
+    trends.growth.top <- trends.growth[1:10,]
+    trends.growth.bottom <- trends.growth[11:20,]
+    trends.out <- cbind(trends.growth.top, trends.growth.bottom)
+
+    return(trends.out)
+
+
+
+
+
+
+}
+
+
+
+
+

@@ -54,7 +54,7 @@ shinyServer(function(input, output) {
             trends <- trends.cities
             regions <- trends.cities.regions
             choose.region <- "Choose Cities: "
-            selected.region <- c("United States", "Las Vegas")
+            selected.region <- c("United States", "Miami")
         }
 
         ##Create the checkboxes and select only the
